@@ -45,6 +45,7 @@ class NeatCleanCalendarTile extends StatelessWidget {
   final Color? todayColor;
   final Color? eventColor;
   final Color? eventDoneColor;
+  final double? stateIndicatorSize;
 
   NeatCleanCalendarTile({
     this.onDateSelected,
@@ -53,9 +54,9 @@ class NeatCleanCalendarTile extends StatelessWidget {
     this.dateStyles,
     this.dayOfWeek,
     this.dayOfWeekStyle,
-    this.isDayOfWeek: false,
-    this.isSelected: false,
-    this.inMonth: true,
+    this.isDayOfWeek = false,
+    this.isSelected = false,
+    this.inMonth = true,
     this.events,
     this.defaultDayColor,
     this.defaultOutOfMonthDayColor,
@@ -64,6 +65,7 @@ class NeatCleanCalendarTile extends StatelessWidget {
     this.todayColor,
     this.eventColor,
     this.eventDoneColor,
+    this.stateIndicatorSize = 5.0,
   });
 
   /// This function [renderDateOrDayOfWeek] renders the week view or the month view. It is
@@ -140,8 +142,8 @@ class NeatCleanCalendarTile extends StatelessWidget {
                           return Container(
                             margin: EdgeInsets.only(
                                 left: 2.0, right: 2.0, top: 1.0),
-                            width: 5.0,
-                            height: 5.0,
+                            width: stateIndicatorSize,
+                            height: stateIndicatorSize,
                             decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 // If event is done (isDone == true) set the color of the dots to

@@ -126,6 +126,7 @@ class Calendar extends StatefulWidget {
   final TextStyle? displayMonthTextStyle;
   final DatePickerConfig? datePickerConfig;
   final double? eventTileHeight;
+  final double? stateIndicatorSize;
 
   /// Configures the date picker if enabled
 
@@ -168,6 +169,7 @@ class Calendar extends StatefulWidget {
     this.displayMonthTextStyle,
     this.datePickerConfig,
     this.eventTileHeight,
+    this.stateIndicatorSize = 5.0,
   });
 
   @override
@@ -471,6 +473,7 @@ class _CalendarState extends State<Calendar> {
               child: widget.dayBuilder!(context, day),
               date: day,
               onDateSelected: () => handleSelectedDateAndUserCallback(day),
+              stateIndicatorSize: widget.stateIndicatorSize,
             ),
           );
         } else {
@@ -488,7 +491,9 @@ class _CalendarState extends State<Calendar> {
                 date: day,
                 dateStyles: configureDateStyle(monthStarted, monthEnded),
                 isSelected: Utils.isSameDay(selectedDate, day),
-                inMonth: day.month == selectedDate.month),
+                inMonth: day.month == selectedDate.month,
+                stateIndicatorSize: widget.stateIndicatorSize,
+            ),
           );
         }
       },

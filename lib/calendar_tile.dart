@@ -46,6 +46,7 @@ class NeatCleanCalendarTile extends StatelessWidget {
   final Color? eventColor;
   final Color? eventDoneColor;
   final double? stateIndicatorSize;
+  final double? dayFontSize;
 
   NeatCleanCalendarTile({
     this.onDateSelected,
@@ -66,6 +67,7 @@ class NeatCleanCalendarTile extends StatelessWidget {
     this.eventColor,
     this.eventDoneColor,
     this.stateIndicatorSize = 5.0,
+    this.dayFontSize = 12.0,
   });
 
   /// This function [renderDateOrDayOfWeek] renders the week view or the month view. It is
@@ -116,7 +118,7 @@ class NeatCleanCalendarTile extends StatelessWidget {
                 Text(
                   date != null ? DateFormat("d").format(date!) : '',
                   style: TextStyle(
-                      fontSize: 14.0,
+                      fontSize: this.dayFontSize,
                       fontWeight: FontWeight.w400,
                       color: isSelected && this.date != null
                           ? Colors.white

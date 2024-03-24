@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_neat_and_clean_calendar/provider_image.dart';
-// import 'package:flutter_neat_and_clean_calendar/platform_widgets.dart';
 import './date_utils.dart';
 import './neat_and_clean_calendar_event.dart';
 import "package:intl/intl.dart";
@@ -47,6 +45,8 @@ class NeatCleanCalendarTile extends StatelessWidget {
   final Color? todayColor;
   final Color? eventColor;
   final Color? eventDoneColor;
+  final double? stateIndicatorSize;
+  final double? dayFontSize;
 
   NeatCleanCalendarTile({
     this.onDateSelected,
@@ -66,6 +66,8 @@ class NeatCleanCalendarTile extends StatelessWidget {
     this.todayColor,
     this.eventColor,
     this.eventDoneColor,
+    this.stateIndicatorSize = 5.0,
+    this.dayFontSize = 12.0,
   });
 
   /// This function [renderDateOrDayOfWeek] renders the week view or the month view. It is
@@ -106,28 +108,8 @@ class NeatCleanCalendarTile extends StatelessWidget {
                                 : Colors.red
                             : selectedColor
                         : Theme.of(context).primaryColor,
-                    image: events != null && events!.isNotEmpty
-                        ? icon != '' && icon != null
-                            ? DecorationImage(
-                                fit: BoxFit.cover,
-                                image: providerImage(icon!),
-                              )
-                            : null
-                        : null,
                   )
-                : events == null
-                    ? BoxDecoration()
-                    : events!.isNotEmpty
-                        ? BoxDecoration(
-                            shape: BoxShape.circle,
-                            image: icon != '' && icon != null
-                                ? DecorationImage(
-                                    fit: BoxFit.cover,
-                                    image: providerImage(icon!),
-                                  )
-                                : null,
-                          )
-                        : BoxDecoration(), // no decoration when not selected
+                : BoxDecoration(), // no decoration when not selected
             alignment: Alignment.center,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -136,24 +118,19 @@ class NeatCleanCalendarTile extends StatelessWidget {
                 Text(
                   date != null ? DateFormat("d").format(date!) : '',
                   style: TextStyle(
-                    fontSize: 14.0,
-                    fontWeight: FontWeight.w400,
-                    color: isSelected && this.date != null
-                        ? Colors.white
-                        : Utils.isSameDay(this.date!, DateTime.now())
-                            ? todayColor
-                            : inMonth
-                                ? defaultDayColor != null
-                                    ? defaultDayColor
-                                    : events != null &&
-                                            events!.isNotEmpty &&
-                                            icon != ''
-                                        ? Colors.white
-                                        : Colors.black
-                                : (defaultOutOfMonthDayColor != null
-                                    ? defaultOutOfMonthDayColor
-                                    : Colors.grey),
-                  ),
+                      fontSize: this.dayFontSize,
+                      fontWeight: FontWeight.w400,
+                      color: isSelected && this.date != null
+                          ? Colors.white
+                          : Utils.isSameDay(this.date!, DateTime.now())
+                              ? todayColor
+                              : inMonth
+                                  ? defaultDayColor != null
+                                      ? defaultDayColor
+                                      : Colors.black
+                                  : (defaultOutOfMonthDayColor != null
+                                      ? defaultOutOfMonthDayColor
+                                      : Colors.grey)),
                   // Grey color for previous or next months dates
                 ),
                 // Dots for the events
@@ -167,33 +144,30 @@ class NeatCleanCalendarTile extends StatelessWidget {
                           return Container(
                             margin: EdgeInsets.only(
                                 left: 2.0, right: 2.0, top: 1.0),
-                            width: 5.0,
-                            height: 5.0,
+                            width: stateIndicatorSize,
+                            height: stateIndicatorSize,
                             decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              // If event is done (isDone == true) set the color of the dots to
-                              // the eventDoneColor (if given) otherwise use the primary color of
-                              // the theme
-                              // If the event is not done yet, we use the given eventColor or the
-                              // color property of the NeatCleanCalendarEvent. If both aren't set, then
-                              // the accent color of the theme get used.
-                              color: (() {
-                                if (isSelected) return Colors.white;
-                                // If eventColor property was not set, the color defined for the event
-                                // gets used. If the eveent has its property isDone set to true, the
-                                // eventDoneColor gets used.
-                                if (event.isDone) {
-                                  return eventDoneColor ??
-                                      Theme.of(context).primaryColor;
-                                }
-                                return eventColor ??
-                                    event.color ??
-                                    Theme.of(context).colorScheme.secondary;
-                              }()),
-                            ),
+                                shape: BoxShape.circle,
+                                // If event is done (isDone == true) set the color of the dots to
+                                // the eventDoneColor (if given) otherwise use the primary color of
+                                // the theme
+                                // If the event is not done yet, we use the given eventColor or the
+                                // color property of the NeatCleanCalendarEvent. If both aren't set, then
+                                // the accent color of the theme get used.
+                                color: (() {
+                                  if (isSelected) return Colors.white;
+                                  // If eventColor property was not set, the color defined for the event
+                                  // gets used.
+                                  if (event.isDone) {
+                                    return eventDoneColor ??
+                                        Theme.of(context).primaryColor;
+                                  }
+                                  return eventColor ??
+                                      event.color ??
+                                      Theme.of(context).colorScheme.secondary;
+                                }())),
                           );
-                        }).toList(),
-                      )
+                        }).toList())
                     : Container(),
               ],
             ),
@@ -202,17 +176,6 @@ class NeatCleanCalendarTile extends StatelessWidget {
       );
     }
   }
-
-  String? get icon => events!
-      .firstWhere(
-        (element) => Utils.isSameDay(this.date!, element.startTime),
-        orElse: () => NeatCleanCalendarEvent(
-          '',
-          startTime: this.date!,
-          endTime: this.date!,
-        ),
-      )
-      .icon;
 
   @override
   Widget build(BuildContext context) {

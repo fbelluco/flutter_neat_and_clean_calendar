@@ -18,16 +18,22 @@ class NeatCleanCalendarEvent {
   MultiDaySegement? multiDaySegement;
   bool isDone;
   Map<String, dynamic>? metadata;
+  String? icon;
+  bool? wide = false;
 
-  NeatCleanCalendarEvent(this.summary,
-      {this.description = '',
-      this.location = '',
-      required this.startTime,
-      required this.endTime,
-      this.color = Colors.blue,
-      this.isAllDay = false,
-      this.isMultiDay = false,
-      this.isDone = false,
-      multiDaySegement,
-      this.metadata});
+  NeatCleanCalendarEvent(
+      this.summary, {
+        this.description = '',
+        this.location = '',
+        required this.startTime,
+        required this.endTime,
+        this.color = Colors.blue,
+        this.isAllDay = false,
+        this.isMultiDay = false,
+        this.isDone = false,
+        multiDaySegement,
+        this.metadata,
+        this.icon,
+        this.wide,
+      });
 }

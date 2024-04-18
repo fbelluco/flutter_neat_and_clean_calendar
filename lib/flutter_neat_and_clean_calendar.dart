@@ -10,11 +10,14 @@ import './neat_and_clean_calendar_event.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
+import 'provider_image.dart';
+
 // Export NeatCleanCalendarEvent for using it in the application
 export './neat_and_clean_calendar_event.dart';
 
 typedef DayBuilder(BuildContext context, DateTime day);
-typedef EventListBuilder(BuildContext context, List<NeatCleanCalendarEvent> events);
+typedef EventListBuilder(
+    BuildContext context, List<NeatCleanCalendarEvent> events);
 
 enum DatePickerType { hidden, year, date }
 
@@ -83,6 +86,7 @@ class Range {
 /// [expandableDateFormat] defines the formatting of the date in the bottom bar
 /// [displayMonthTextStyle] is a [TextStyle] for styling the month name in the top bar.
 /// [datePickerConfig] is a [DatePickerConfig] object. It contains the configuration of the date picker, if enabled.
+/// [showEvents] is a [bool]. This parameter allows the calender to show listed events. Default value is set to [true], but the user can hide the events entirely by setting it to [false]
 
 // The library internnaly will use a Map<DateTime, List<NeatCleanCalendarEvent>> for the events.
 
@@ -99,7 +103,8 @@ class Calendar extends StatefulWidget {
   final DatePickerType? datePickerType;
   final bool hideArrows;
   final bool hideTodayIcon;
-  @Deprecated('Use `eventsList` instead. Will be removed in NeatAndCleanCalendar 0.4.0')
+  @Deprecated(
+      'Use `eventsList` instead. Will be removed in NeatAndCleanCalendar 0.4.0')
   final Map<DateTime, List<NeatCleanCalendarEvent>>? events;
   final List<NeatCleanCalendarEvent>? eventsList;
   final Color? defaultDayColor;
@@ -126,6 +131,7 @@ class Calendar extends StatefulWidget {
   final TextStyle? displayMonthTextStyle;
   final DatePickerConfig? datePickerConfig;
   final double? eventTileHeight;
+  final bool showEvents;
   final double? stateIndicatorSize;
   final double? dayFontSize;
 
@@ -171,6 +177,7 @@ class Calendar extends StatefulWidget {
     this.displayMonthTextStyle,
     this.datePickerConfig,
     this.eventTileHeight,
+    this.showEvents = true,
     this.stateIndicatorSize = 5.0,
     this.dayFontSize = 12.0,
   });
@@ -184,6 +191,7 @@ class _CalendarState extends State<Calendar> {
   late List<DateTime> selectedMonthsDays;
   late Iterable<DateTime> selectedWeekDays;
   late Map<DateTime, List<NeatCleanCalendarEvent>>? eventsMap;
+  // selectedDate is the date, that is currently selected. It is highlighted with a circle.
   DateTime _selectedDate = DateTime.now();
   String? currentMonth;
   late bool isExpanded;
@@ -197,9 +205,11 @@ class _CalendarState extends State<Calendar> {
 
     _selectedDate = widget.initialDate ?? DateTime.now();
     initializeDateFormatting(widget.locale, null).then((_) => setState(() {
-          var monthFormat = DateFormat('MMMM yyyy', widget.locale).format(_selectedDate);
-          displayMonth = '${monthFormat[0].toUpperCase()}${monthFormat.substring(1)}';
-        }));
+      var monthFormat =
+      DateFormat('MMMM yyyy', widget.locale).format(_selectedDate);
+      displayMonth =
+      '${monthFormat[0].toUpperCase()}${monthFormat.substring(1)}';
+    }));
   }
 
   /// The method [_updateEventsMap] has the purpose to update the eventsMap, when the calendar widget
@@ -214,26 +224,37 @@ class _CalendarState extends State<Calendar> {
     // property events (the map) will get removed.
     // Here the library checks, if a map was provided. You can not provide a list and a map
     // at the same time. In that case the map will be used, while the list is omitted.
-    if (widget.eventsList != null && widget.eventsList!.isNotEmpty && eventsMap!.isEmpty) {
+    if (widget.eventsList != null &&
+        widget.eventsList!.isNotEmpty &&
+        eventsMap!.isEmpty) {
       widget.eventsList!.forEach((event) {
         final int range = event.endTime.difference(event.startTime).inDays;
         // Event starts and ends on the same day.
         if (range == 0) {
-          List<NeatCleanCalendarEvent> dateList =
-              eventsMap![DateTime(event.startTime.year, event.startTime.month, event.startTime.day)] ?? [];
+          List<NeatCleanCalendarEvent> dateList = eventsMap![DateTime(
+              event.startTime.year,
+              event.startTime.month,
+              event.startTime.day)] ??
+              [];
           // Just add the event to the list.
-          eventsMap![DateTime(event.startTime.year, event.startTime.month, event.startTime.day)] = dateList..add(event);
+          eventsMap![DateTime(event.startTime.year, event.startTime.month,
+              event.startTime.day)] = dateList..add(event);
         } else {
           for (var i = 0; i <= range; i++) {
-            List<NeatCleanCalendarEvent> dateList =
-                eventsMap![DateTime(event.startTime.year, event.startTime.month, event.startTime.day + i)] ?? [];
+            List<NeatCleanCalendarEvent> dateList = eventsMap![DateTime(
+                event.startTime.year,
+                event.startTime.month,
+                event.startTime.day + i)] ??
+                [];
             // Iteration over the range (diferrence between start and end time in days).
-            NeatCleanCalendarEvent newEvent = NeatCleanCalendarEvent(event.summary,
+            NeatCleanCalendarEvent newEvent = NeatCleanCalendarEvent(
+                event.summary,
                 description: event.description,
                 location: event.location,
                 color: event.color,
                 isAllDay: event.isAllDay,
                 isDone: event.isDone,
+                icon: event.icon,
                 // Multi-day events span over several days. They have a start time on the first day
                 // and an end time on the last day.  All-day events don't have a start time and end time
                 // So if an event ist an all-day event, the multi-day property gets set to false.
@@ -243,10 +264,18 @@ class _CalendarState extends State<Calendar> {
                 // Event spans over several days, but entreis in the list can only cover one
                 // day, so the end date of one entry must be on the same day as the start.
                 multiDaySegement: MultiDaySegement.first,
-                startTime: DateTime(event.startTime.year, event.startTime.month, event.startTime.day + i,
-                    event.startTime.hour, event.startTime.minute),
-                endTime: DateTime(event.startTime.year, event.startTime.month, event.startTime.day + i,
-                    event.endTime.hour, event.endTime.minute));
+                startTime: DateTime(
+                    event.startTime.year,
+                    event.startTime.month,
+                    event.startTime.day + i,
+                    event.startTime.hour,
+                    event.startTime.minute),
+                endTime: DateTime(
+                    event.startTime.year,
+                    event.startTime.month,
+                    event.startTime.day + i,
+                    event.endTime.hour,
+                    event.endTime.minute));
             if (i == 0) {
               // First day of the event.
               newEvent.multiDaySegement = MultiDaySegement.first;
@@ -257,16 +286,20 @@ class _CalendarState extends State<Calendar> {
               // Middle day of the event.
               newEvent.multiDaySegement = MultiDaySegement.middle;
             }
-            eventsMap![DateTime(event.startTime.year, event.startTime.month, event.startTime.day + i)] = dateList
-              ..add(newEvent);
+            eventsMap![DateTime(event.startTime.year, event.startTime.month,
+                event.startTime.day + i)] = dateList..add(newEvent);
           }
         }
       });
     }
     selectedMonthsDays = _daysInMonth(_selectedDate);
-    selectedWeekDays = Utils.daysInRange(_firstDayOfWeek(_selectedDate), _lastDayOfWeek(_selectedDate)).toList();
+    selectedWeekDays = Utils.daysInRange(
+        _firstDayOfWeek(_selectedDate), _lastDayOfWeek(_selectedDate))
+        .toList();
 
-    _selectedEvents = eventsMap?[DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day)] ?? [];
+    _selectedEvents = eventsMap?[DateTime(
+        _selectedDate.year, _selectedDate.month, _selectedDate.day)] ??
+        [];
 
     print('eventsMap has ${eventsMap?.length} entries');
   }
@@ -279,11 +312,11 @@ class _CalendarState extends State<Calendar> {
 
     if (!widget.hideArrows) {
       leftArrow = PlatformIconButton(
-        onPressed: isExpanded ? previousMonth : previousWeek,
+        onPressed: isExpanded ? () => previousMonth(true) : previousWeek,
         icon: Icon(Icons.chevron_left),
       );
       rightArrow = PlatformIconButton(
-        onPressed: isExpanded ? nextMonth : nextWeek,
+        onPressed: isExpanded ? () => nextMonth(true) : nextWeek,
         icon: Icon(Icons.chevron_right),
       );
     } else {
@@ -300,7 +333,8 @@ class _CalendarState extends State<Calendar> {
       todayIcon = Container();
     }
 
-    if (widget.datePickerType != null && widget.datePickerType != DatePickerType.hidden) {
+    if (widget.datePickerType != null &&
+        widget.datePickerType != DatePickerType.hidden) {
       jumpDateIcon = GestureDetector(
         child: Icon(Icons.date_range_outlined),
         onTap: () {
@@ -316,9 +350,12 @@ class _CalendarState extends State<Calendar> {
                     width: 300,
                     height: 300,
                     child: YearPicker(
-                      firstDate: widget.datePickerConfig?.firstDate ?? DateTime(DateTime.now().year - 100, 1),
-                      lastDate: widget.datePickerConfig?.lastDate ?? DateTime(DateTime.now().year + 100, 1),
-                      initialDate: widget.datePickerConfig?.initialDate ?? DateTime.now(),
+                      firstDate: widget.datePickerConfig?.firstDate ??
+                          DateTime(DateTime.now().year - 100, 1),
+                      lastDate: widget.datePickerConfig?.lastDate ??
+                          DateTime(DateTime.now().year + 100, 1),
+                      initialDate: widget.datePickerConfig?.initialDate ??
+                          DateTime.now(),
                       // save the selected date to _selectedDate DateTime variable.
                       // It's used to set the previous selected date when
                       // re-showing the dialog.
@@ -344,18 +381,31 @@ class _CalendarState extends State<Calendar> {
               lastDate: DateTime(2100),
             ).then((date) {
               if (date != null) {
+                // The selected date is printed to the console in ISO 8601 format for debugging purposes.
+                // The "onJumpToDateSelected" callback is then invoked with the selected date.
+                // These lines have been moved outside of the "setState" block to
+                // trigger the callback methods (i.e. onMonthChanged) in the parent widget.
+                // After the callback methods are invoked, the "setState" block is called and the
+                // _selectedDate is updated. This must be done after the callback methods are invoked,
+                // otherwise the callback methods will not trigger, if the current date is equal to the
+                // selected date.
+                print('Date chosen: ${_selectedDate.toIso8601String()}');
+                onJumpToDateSelected(date);
                 setState(() {
                   _selectedDate = date;
                   selectedMonthsDays = _daysInMonth(_selectedDate);
-                  selectedWeekDays =
-                      Utils.daysInRange(_firstDayOfWeek(_selectedDate), _lastDayOfWeek(_selectedDate)).toList();
-                  var monthFormat = DateFormat('MMMM yyyy', widget.locale).format(_selectedDate);
-                  displayMonth = '${monthFormat[0].toUpperCase()}${monthFormat.substring(1)}';
-                  _selectedEvents =
-                      eventsMap?[DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day)] ?? [];
+                  selectedWeekDays = Utils.daysInRange(
+                      _firstDayOfWeek(_selectedDate),
+                      _lastDayOfWeek(_selectedDate))
+                      .toList();
+                  var monthFormat = DateFormat('MMMM yyyy', widget.locale)
+                      .format(_selectedDate);
+                  displayMonth =
+                  '${monthFormat[0].toUpperCase()}${monthFormat.substring(1)}';
+                  _selectedEvents = eventsMap?[DateTime(_selectedDate.year,
+                      _selectedDate.month, _selectedDate.day)] ??
+                      [];
                 });
-                print('Date chosen: ${_selectedDate.toIso8601String()}');
-                onJumpToDateSelected(_selectedDate);
               }
             });
           }
@@ -401,23 +451,26 @@ class _CalendarState extends State<Calendar> {
           horizontalThreshold: 40.0,
           swipeDetectionMoment: SwipeDetectionMoment.onUpdate,
         ),
-        child: Column(children: <Widget>[
-          GridView.count(
-            childAspectRatio: 1.5,
-            primary: false,
-            shrinkWrap: true,
-            crossAxisCount: 7,
-            padding: EdgeInsets.only(bottom: 0.0),
-            children: calendarBuilder(),
-          ),
-        ]),
+        child: Column(
+          children: <Widget>[
+            GridView.count(
+              childAspectRatio: 1.5,
+              primary: false,
+              shrinkWrap: true,
+              crossAxisCount: 7,
+              padding: EdgeInsets.only(bottom: 0.0),
+              children: calendarBuilder(),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   List<Widget> calendarBuilder() {
     List<Widget> dayWidgets = [];
-    List<DateTime> calendarDays = isExpanded ? selectedMonthsDays : selectedWeekDays as List<DateTime>;
+    List<DateTime> calendarDays =
+    isExpanded ? selectedMonthsDays : selectedWeekDays as List<DateTime>;
     widget.weekDays.forEach(
       (day) {
         dayWidgets.add(
@@ -449,7 +502,9 @@ class _CalendarState extends State<Calendar> {
     calendarDays.forEach(
       (day) {
         if (day.hour > 0) {
-          day = DateFormat("yyyy-MM-dd HH:mm:ssZZZ").parse(day.toString()).toLocal();
+          day = DateFormat("yyyy-MM-dd HH:mm:ssZZZ")
+              .parse(day.toString())
+              .toLocal();
           day = day.subtract(new Duration(hours: day.hour));
         }
 
@@ -513,13 +568,14 @@ class _CalendarState extends State<Calendar> {
     if (isExpanded) {
       final TextStyle body1StyleDisabled = body1Style!.copyWith(
           color: Color.fromARGB(
-        100,
-        body1Style.color!.red,
-        body1Style.color!.green,
-        body1Style.color!.blue,
-      ));
+            100,
+            body1Style.color!.red,
+            body1Style.color!.green,
+            body1Style.color!.blue,
+          ));
 
-      dateStyles = monthStarted && !monthEnded ? body1Style : body1StyleDisabled;
+      dateStyles =
+      monthStarted && !monthEnded ? body1Style : body1StyleDisabled;
     } else {
       dateStyles = body1Style;
     }
@@ -540,22 +596,24 @@ class _CalendarState extends State<Calendar> {
             children: <Widget>[
               SizedBox(width: 40.0),
               Text(
-                DateFormat(widget.expandableDateFormat, widget.locale).format(_selectedDate),
+                DateFormat(widget.expandableDateFormat, widget.locale)
+                    .format(_selectedDate),
                 style: widget.bottomBarTextStyle ?? TextStyle(fontSize: 13),
               ),
               PlatformIconButton(
                 onPressed: toggleExpanded,
-                iconSize: 25.0,
                 padding: EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
                 icon: isExpanded
                     ? Icon(
-                        Icons.arrow_drop_up,
-                        color: widget.bottomBarArrowColor ?? Colors.black,
-                      )
+                  Icons.arrow_drop_up,
+                  size: 25.0,
+                  color: widget.bottomBarArrowColor ?? Colors.black,
+                )
                     : Icon(
-                        Icons.arrow_drop_down,
-                        color: widget.bottomBarArrowColor ?? Colors.black,
-                      ),
+                  Icons.arrow_drop_down,
+                  size: 25.0,
+                  color: widget.bottomBarArrowColor ?? Colors.black,
+                ),
               ),
             ],
           ),
@@ -572,82 +630,104 @@ class _CalendarState extends State<Calendar> {
     if (widget.eventListBuilder == null) {
       return Expanded(
         child: _selectedEvents != null && _selectedEvents!.isNotEmpty
-            // Create a list of events that are occurring on the currently selected day, if there are
-            // any. Otherwise, display an empty Container.
+        // Create a list of events that are occurring on the currently selected day, if there are
+        // any. Otherwise, display an empty Container.
             ? ListView.builder(
-                padding: EdgeInsets.all(0.0),
-                itemBuilder: (BuildContext context, int index) {
-                  final NeatCleanCalendarEvent event = _selectedEvents![index];
-                  final String start = DateFormat('HH:mm').format(event.startTime).toString();
-                  final String end = DateFormat('HH:mm').format(event.endTime).toString();
-                  return Container(
-                    height: widget.eventTileHeight ?? MediaQuery.of(context).size.height * 0.075,
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: () {
-                        if (widget.onEventSelected != null) {
-                          widget.onEventSelected!(event);
-                        }
-                      },
-                      onLongPress: () {
-                        if (widget.onEventLongPressed != null) {
-                          widget.onEventLongPressed!(event);
-                        }
-                      },
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: <Widget>[
-                          Expanded(
-                            flex: 5,
-                            child: Padding(
-                              padding: const EdgeInsets.all(4.0),
-                              child: Container(
-                                color: event.color,
-                              ),
-                            ),
+          padding: EdgeInsets.all(0.0),
+          itemBuilder: (BuildContext context, int index) {
+            final NeatCleanCalendarEvent event = _selectedEvents![index];
+            final String start =
+            DateFormat('HH:mm').format(event.startTime).toString();
+            final String end =
+            DateFormat('HH:mm').format(event.endTime).toString();
+            return Container(
+              height: widget.eventTileHeight ??
+                  MediaQuery.of(context).size.height * 0.08,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () {
+                  if (widget.onEventSelected != null) {
+                    widget.onEventSelected!(event);
+                  }
+                },
+                onLongPress: () {
+                  if (widget.onEventLongPressed != null) {
+                    widget.onEventLongPressed!(event);
+                  }
+                },
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
+                    Expanded(
+                      flex: event.wide != null && event.wide! == true
+                          ? 25
+                          : 5,
+                      child: Padding(
+                        padding: const EdgeInsets.all(4.0),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            // If no image is provided, use the color of the event.
+                            // If the event has set isDone to true, use the eventDoneColor
+                            // gets used. If that eventDoneColor is not set, use the
+                            // primaryColor of the theme.
+                            color: event.isDone
+                                ? widget.eventDoneColor ??
+                                Theme.of(context).primaryColor
+                                : event.color,
+                            borderRadius: BorderRadius.circular(10),
+                            image: event.icon != '' && event.icon != null
+                                ? DecorationImage(
+                              fit: BoxFit.cover,
+                              image: providerImage(event.icon!),
+                            )
+                                : null,
                           ),
-                          SizedBox(
-                            height: 5.0,
-                          ),
-                          Expanded(
-                            flex: 75,
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(event.summary, style: Theme.of(context).textTheme.subtitle2),
-                                  SizedBox(
-                                    height: 10.0,
-                                  ),
-                                  Text(
-                                    event.description,
-                                    overflow: TextOverflow.ellipsis,
-                                  )
-                                ],
-                              ),
-                            ),
-                          ),
-                          // This Expanded widget gets used to display the start and end time of the
-                          // event.
-                          Expanded(
-                            flex: 30,
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              // If the event is all day, then display the word "All day" with no time.
-                              child: event.isAllDay || event.isMultiDay
-                                  ? allOrMultiDayDayTimeWidget(event)
-                                  : singleDayTimeWidget(start, end),
-                            ),
-                          )
-                        ],
+                        ),
                       ),
                     ),
-                  );
-                },
-                itemCount: _selectedEvents!.length,
-              )
+                    SizedBox(height: 5.0),
+                    Expanded(
+                      flex: 60,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(event.summary,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .subtitle2),
+                            SizedBox(
+                              height: 10.0,
+                            ),
+                            Text(
+                              event.description,
+                              overflow: TextOverflow.ellipsis,
+                            )
+                          ],
+                        ),
+                      ),
+                    ),
+                    // This Expanded widget gets used to display the start and end time of the
+                    // event.
+                    Expanded(
+                      flex: 30,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        // If the event is all day, then display the word "All day" with no time.
+                        child: event.isAllDay || event.isMultiDay
+                            ? allOrMultiDayDayTimeWidget(event)
+                            : singleDayTimeWidget(start, end),
+                      ),
+                    )
+                  ],
+                ),
+              ),
+            );
+          },
+          itemCount: _selectedEvents!.length,
+        )
             : Container(),
       );
     } else {
@@ -678,7 +758,10 @@ class _CalendarState extends State<Calendar> {
         crossAxisAlignment: CrossAxisAlignment.end,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(widget.allDayEventText, style: Theme.of(context).textTheme.bodyText1),
+          Text(
+            widget.allDayEventText,
+            style: Theme.of(context).textTheme.bodyText1,
+          ),
         ],
       );
     }
@@ -738,7 +821,7 @@ class _CalendarState extends State<Calendar> {
             isExpanded: isExpanded,
           ),
           expansionButtonRow,
-          eventList
+          if (widget.showEvents) eventList
         ],
       ),
     );
@@ -751,60 +834,98 @@ class _CalendarState extends State<Calendar> {
     onJumpToDateSelected(DateTime.now());
   }
 
-  void nextMonth() {
+  // The function [nextMonth] updates the "_selectedDate" to the first day of the previous month.
+  // If "launchCallback" is true, it also triggers the date selection callback with the new date.
+  // The state is then updated with the new selected date, the days in the new month, the display month, and any events on the new date.
+  // This function is typically used to navigate to the previous month in a calendar widget.
+  void nextMonth(bool launchCallback) {
+    DateTime _newDate = Utils.nextMonth(_selectedDate);
+    // Parameter "launchCallback" is there to avoid triggering the callback twice.
+    if (launchCallback) {
+      _launchDateSelectionCallback(_newDate);
+    }
     setState(() {
-      _selectedDate = Utils.nextMonth(_selectedDate);
+      _selectedDate = _newDate;
       var firstDateOfNewMonth = Utils.firstDayOfMonth(_selectedDate);
       var lastDateOfNewMonth = Utils.lastDayOfMonth(_selectedDate);
       updateSelectedRange(firstDateOfNewMonth, lastDateOfNewMonth);
       selectedMonthsDays = _daysInMonth(_selectedDate);
-      var monthFormat = DateFormat('MMMM yyyy', widget.locale).format(_selectedDate);
-      displayMonth = '${monthFormat[0].toUpperCase()}${monthFormat.substring(1)}';
-      _selectedEvents = eventsMap?[DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day)] ?? [];
+      var monthFormat =
+      DateFormat('MMMM yyyy', widget.locale).format(_selectedDate);
+      displayMonth =
+      '${monthFormat[0].toUpperCase()}${monthFormat.substring(1)}';
+      _selectedEvents = eventsMap?[DateTime(
+          _selectedDate.year, _selectedDate.month, _selectedDate.day)] ??
+          [];
     });
-    _launchDateSelectionCallback(_selectedDate);
   }
 
-  void previousMonth() {
+  // The function [previousMonth] updates the "_selectedDate" to the first day of the previous month.
+  // If "launchCallback" is true, it also triggers the date selection callback with the new date.
+  // The state is then updated with the new selected date, the days in the new month, the display month, and any events on the new date.
+  // This function is typically used to navigate to the previous month in a calendar widget.
+  void previousMonth(bool launchCallback) {
+    DateTime _newDate = Utils.previousMonth(_selectedDate);
+    // Parameter "launchCallback" is there to avoid triggering the callback twice.
+    if (launchCallback) {
+      _launchDateSelectionCallback(_newDate);
+    }
     setState(() {
-      _selectedDate = Utils.previousMonth(_selectedDate);
+      _selectedDate = _newDate;
       var firstDateOfNewMonth = Utils.firstDayOfMonth(_selectedDate);
       var lastDateOfNewMonth = Utils.lastDayOfMonth(_selectedDate);
       updateSelectedRange(firstDateOfNewMonth, lastDateOfNewMonth);
       selectedMonthsDays = _daysInMonth(_selectedDate);
-      var monthFormat = DateFormat('MMMM yyyy', widget.locale).format(_selectedDate);
-      displayMonth = '${monthFormat[0].toUpperCase()}${monthFormat.substring(1)}';
-      _selectedEvents = eventsMap?[DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day)] ?? [];
+      var monthFormat =
+      DateFormat('MMMM yyyy', widget.locale).format(_selectedDate);
+      displayMonth =
+      '${monthFormat[0].toUpperCase()}${monthFormat.substring(1)}';
+      _selectedEvents = eventsMap?[DateTime(
+          _selectedDate.year, _selectedDate.month, _selectedDate.day)] ??
+          [];
     });
-    _launchDateSelectionCallback(_selectedDate);
   }
 
   void nextWeek() {
+    DateTime _newDate = Utils.nextWeek(_selectedDate);
+    _launchDateSelectionCallback(_newDate);
     setState(() {
-      _selectedDate = Utils.nextWeek(_selectedDate);
+      _selectedDate = _newDate;
       var firstDayOfCurrentWeek = _firstDayOfWeek(_selectedDate);
       var lastDayOfCurrentWeek = _lastDayOfWeek(_selectedDate);
       updateSelectedRange(firstDayOfCurrentWeek, lastDayOfCurrentWeek);
-      selectedWeekDays = Utils.daysInRange(firstDayOfCurrentWeek, lastDayOfCurrentWeek).toList();
-      var monthFormat = DateFormat('MMMM yyyy', widget.locale).format(_selectedDate);
-      displayMonth = '${monthFormat[0].toUpperCase()}${monthFormat.substring(1)}';
-      _selectedEvents = eventsMap?[DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day)] ?? [];
+      selectedWeekDays =
+          Utils.daysInRange(firstDayOfCurrentWeek, lastDayOfCurrentWeek)
+              .toList();
+      var monthFormat =
+      DateFormat('MMMM yyyy', widget.locale).format(_selectedDate);
+      displayMonth =
+      '${monthFormat[0].toUpperCase()}${monthFormat.substring(1)}';
+      _selectedEvents = eventsMap?[DateTime(
+          _selectedDate.year, _selectedDate.month, _selectedDate.day)] ??
+          [];
     });
-    _launchDateSelectionCallback(_selectedDate);
   }
 
   void previousWeek() {
+    DateTime _newDate = Utils.previousWeek(_selectedDate);
+    _launchDateSelectionCallback(_newDate);
     setState(() {
-      _selectedDate = Utils.previousWeek(_selectedDate);
+      _selectedDate = _newDate;
       var firstDayOfCurrentWeek = _firstDayOfWeek(_selectedDate);
       var lastDayOfCurrentWeek = _lastDayOfWeek(_selectedDate);
       updateSelectedRange(firstDayOfCurrentWeek, lastDayOfCurrentWeek);
-      selectedWeekDays = Utils.daysInRange(firstDayOfCurrentWeek, lastDayOfCurrentWeek).toList();
-      var monthFormat = DateFormat('MMMM yyyy', widget.locale).format(_selectedDate);
-      displayMonth = '${monthFormat[0].toUpperCase()}${monthFormat.substring(1)}';
-      _selectedEvents = eventsMap?[DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day)] ?? [];
+      selectedWeekDays =
+          Utils.daysInRange(firstDayOfCurrentWeek, lastDayOfCurrentWeek)
+              .toList();
+      var monthFormat =
+      DateFormat('MMMM yyyy', widget.locale).format(_selectedDate);
+      displayMonth =
+      '${monthFormat[0].toUpperCase()}${monthFormat.substring(1)}';
+      _selectedEvents = eventsMap?[DateTime(
+          _selectedDate.year, _selectedDate.month, _selectedDate.day)] ??
+          [];
     });
-    _launchDateSelectionCallback(_selectedDate);
   }
 
   void updateSelectedRange(DateTime start, DateTime end) {
@@ -814,20 +935,27 @@ class _CalendarState extends State<Calendar> {
     }
   }
 
-  void onJumpToDateSelected(DateTime selectedDate) {
-    _selectedDate = selectedDate;
+  void onJumpToDateSelected(DateTime day) {
+    // Fire onDateSelected callback and onMonthChanged callback.
+    _launchDateSelectionCallback(day);
+
+    _selectedDate = day;
     var firstDayOfCurrentWeek = _firstDayOfWeek(_selectedDate);
     var lastDayOfCurrentWeek = _lastDayOfWeek(_selectedDate);
 
     setState(() {
-      selectedWeekDays = Utils.daysInRange(firstDayOfCurrentWeek, lastDayOfCurrentWeek).toList();
+      selectedWeekDays =
+          Utils.daysInRange(firstDayOfCurrentWeek, lastDayOfCurrentWeek)
+              .toList();
       selectedMonthsDays = _daysInMonth(_selectedDate);
-      var monthFormat = DateFormat('MMMM yyyy', widget.locale).format(_selectedDate);
-      displayMonth = '${monthFormat[0].toUpperCase()}${monthFormat.substring(1)}';
-      _selectedEvents = eventsMap?[DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day)] ?? [];
+      var monthFormat =
+      DateFormat('MMMM yyyy', widget.locale).format(_selectedDate);
+      displayMonth =
+      '${monthFormat[0].toUpperCase()}${monthFormat.substring(1)}';
+      _selectedEvents = eventsMap?[DateTime(
+          _selectedDate.year, _selectedDate.month, _selectedDate.day)] ??
+          [];
     });
-
-    _launchDateSelectionCallback(_selectedDate);
   }
 
   void _onSwipeUp() {
@@ -840,7 +968,9 @@ class _CalendarState extends State<Calendar> {
 
   void _onSwipeRight() {
     if (isExpanded) {
-      previousMonth();
+      // Here _launchDateSelectionCallback was not called before. That's why set the
+      // "launchCallback" parameter to true.
+      previousMonth(true);
     } else {
       previousWeek();
     }
@@ -848,7 +978,9 @@ class _CalendarState extends State<Calendar> {
 
   void _onSwipeLeft() {
     if (isExpanded) {
-      nextMonth();
+      // Here _launchDateSelectionCallback was not called before. That's why set the
+      // "launchCallback" parameter to true.
+      nextMonth(true);
     } else {
       nextWeek();
     }
@@ -857,68 +989,83 @@ class _CalendarState extends State<Calendar> {
   void toggleExpanded() {
     if (widget.isExpandable) {
       setState(() => isExpanded = !isExpanded);
-      if (widget.onExpandStateChanged != null) widget.onExpandStateChanged!(isExpanded);
+      if (widget.onExpandStateChanged != null)
+        widget.onExpandStateChanged!(isExpanded);
     }
   }
 
+  // The "handleSelectedDateAndUserCallback" method is responsible for processing the
+  // selected date and invoking the corresponding user callback.
+  // It is expected to be called when a user selects a date.
+  // The exact functionality can vary depending on the implementation,
+  // but typically this method will store the selected date and then call a
+  // user-defined callback function based on this date.
   void handleSelectedDateAndUserCallback(DateTime day) {
     print('daySelected: $day');
+    // Fire onDateSelected callback and onMonthChanged callback.
+    _launchDateSelectionCallback(day);
+
     var firstDayOfCurrentWeek = _firstDayOfWeek(day);
     var lastDayOfCurrentWeek = _lastDayOfWeek(day);
-    // Flag to decide if we should trigger "onDateSelected" callback
-    // This avoids doule executing the callback when selecting a date in the next month
-    bool isCallback = true;
     // Check if the selected day falls into the next month. If this is the case,
     // then we need to additionaly check, if a day in next year was selected.
     if (_selectedDate.month > day.month) {
       // Day in next year selected? Switch to next month.
       if (_selectedDate.year < day.year) {
-        nextMonth();
+        // _launchDateSelectionCallback was already called befor. That's why set the
+        // "launchCallback" parameter to false, to avoid calling the callback twice.
+        nextMonth(false);
       } else {
-        previousMonth();
+        // _launchDateSelectionCallback was already called befor. That's why set the
+        // "launchCallback" parameter to false, to avoid calling the callback twice.
+        previousMonth(false);
       }
-      // Callback already fired in nextMonth() or previoisMonth(). Dont
-      // execute it again.
-      isCallback = false;
     }
     // Check if the selected day falls into the last month. If this is the case,
     // then we need to additionaly check, if a day in last year was selected.
     if (_selectedDate.month < day.month) {
       // Day in next last selected? Switch to next month.
       if (_selectedDate.year > day.year) {
-        previousMonth();
+        // _launchDateSelectionCallback was already called befor. That's why set the
+        // "launchCallback" parameter to false, to avoid calling the callback twice.
+        previousMonth(false);
       } else {
-        nextMonth();
+        // _launchDateSelectionCallback was already called befor. That's why set the
+        // "launchCallback" parameter to false, to avoid calling the callback twice.
+        nextMonth(false);
       }
-      // Callback already fired in nextMonth() or previoisMonth(). Dont
-      // execute it again.
-      isCallback = false;
     }
     setState(() {
       _selectedDate = day;
-      selectedWeekDays = Utils.daysInRange(firstDayOfCurrentWeek, lastDayOfCurrentWeek).toList();
+      selectedWeekDays =
+          Utils.daysInRange(firstDayOfCurrentWeek, lastDayOfCurrentWeek)
+              .toList();
       selectedMonthsDays = _daysInMonth(day);
       _selectedEvents = eventsMap?[_selectedDate] ?? [];
     });
-    // Check, if the callback was already executed before.
-    if (isCallback) {
-      _launchDateSelectionCallback(_selectedDate);
-    }
   }
 
+  // The "_launchDateSelectionCallback" method is used to trigger the date selection callbacks.
+  // If the "onDateSelected" callback is not null, it is invoked with the selected day.
+  // Additionally, if the "onMonthChanged" callback is not null and the selected day is in
+  // a different month or year than the previously selected date,
+  // the "onMonthChanged" callback is invoked with the selected day.
+  // This additional condition prevents the "onMonthChanged" callback from being invoked twice when a date in the same month is selected.
   void _launchDateSelectionCallback(DateTime day) {
     if (widget.onDateSelected != null) {
       widget.onDateSelected!(day);
     }
     // Additional conditions: Only if month or year changed, then call the callback.
     // This avoids double executing the callback when selecting a date in the same month.
-    if (widget.onMonthChanged != null && day.month != _selectedDate.month || day.year != _selectedDate.year) {
+    if (widget.onMonthChanged != null &&
+        (day.month != _selectedDate.month || day.year != _selectedDate.year)) {
       widget.onMonthChanged!(day);
     }
   }
 
   _firstDayOfWeek(DateTime date) {
-    var day = DateTime.utc(_selectedDate.year, _selectedDate.month, _selectedDate.day, 12);
+    var day = DateTime.utc(
+        _selectedDate.year, _selectedDate.month, _selectedDate.day, 12);
     if (widget.startOnMonday == true) {
       day = day.subtract(Duration(days: day.weekday - 1));
     } else {
@@ -938,7 +1085,8 @@ class _CalendarState extends State<Calendar> {
   List<DateTime> _daysInMonth(DateTime month) {
     var first = Utils.firstDayOfMonth(month);
     var daysBefore = first.weekday;
-    var firstToDisplay = first.subtract(new Duration(days: daysBefore - (widget.startOnMonday ? 1 : 0)));
+    var firstToDisplay = first.subtract(
+        new Duration(days: daysBefore - (widget.startOnMonday ? 1 : 0)));
     var last = Utils.lastDayOfMonth(month);
 
     var daysAfter = 7 - last.weekday;
@@ -950,7 +1098,8 @@ class _CalendarState extends State<Calendar> {
 
     // Adding an extra day necessary (if week starts on Monday).
     // Otherwise the week with days in next month would always end on Saturdays.
-    var lastToDisplay = last.add(new Duration(days: daysAfter + (widget.startOnMonday ? 1 : 0)));
+    var lastToDisplay = last
+        .add(new Duration(days: daysAfter + (widget.startOnMonday ? 1 : 0)));
     return Utils.daysInRange(firstToDisplay, lastToDisplay).toList();
   }
 }
@@ -960,7 +1109,10 @@ class ExpansionCrossFade extends StatelessWidget {
   final Widget expanded;
   final bool isExpanded;
 
-  ExpansionCrossFade({required this.collapsed, required this.expanded, required this.isExpanded});
+  ExpansionCrossFade(
+      {required this.collapsed,
+        required this.expanded,
+        required this.isExpanded});
 
   @override
   Widget build(BuildContext context) {
@@ -970,7 +1122,8 @@ class ExpansionCrossFade extends StatelessWidget {
       firstCurve: const Interval(0.0, 1.0, curve: Curves.fastOutSlowIn),
       secondCurve: const Interval(0.0, 1.0, curve: Curves.fastOutSlowIn),
       sizeCurve: Curves.decelerate,
-      crossFadeState: isExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+      crossFadeState:
+      isExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
       duration: const Duration(milliseconds: 300),
     );
   }

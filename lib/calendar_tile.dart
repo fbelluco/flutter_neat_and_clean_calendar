@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_neat_and_clean_calendar/provider_image.dart';
 import './date_utils.dart';
 import './neat_and_clean_calendar_event.dart';
 import "package:intl/intl.dart";
@@ -108,8 +109,28 @@ class NeatCleanCalendarTile extends StatelessWidget {
                                 : Colors.red
                             : selectedColor
                         : Theme.of(context).primaryColor,
+                    image: events != null && events!.isNotEmpty
+                        ? icon != '' && icon != null
+                            ? DecorationImage(
+                                fit: BoxFit.cover,
+                                image: providerImage(icon!),
+                              )
+                            : null
+                        : null,
                   )
-                : BoxDecoration(), // no decoration when not selected
+                : events == null
+                    ? BoxDecoration()
+                    : events!.isNotEmpty
+                        ? BoxDecoration(
+                            shape: BoxShape.circle,
+                            image: icon != '' && icon != null
+                                ? DecorationImage(
+                                    fit: BoxFit.cover,
+                                    image: providerImage(icon!),
+                                  )
+                                : null,
+                          )
+                        : BoxDecoration(), // no decoration when not selected
             alignment: Alignment.center,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -176,6 +197,17 @@ class NeatCleanCalendarTile extends StatelessWidget {
       );
     }
   }
+
+  String? get icon => events!
+      .firstWhere(
+        (element) => Utils.isSameDay(this.date!, element.startTime),
+    orElse: () => NeatCleanCalendarEvent(
+      '',
+      startTime: this.date!,
+      endTime: this.date!,
+    ),
+  )
+      .icon;
 
   @override
   Widget build(BuildContext context) {

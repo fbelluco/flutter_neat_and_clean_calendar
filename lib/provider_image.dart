@@ -6,6 +6,6 @@ ImageProvider providerImage(String image) {
   return image.contains('assets/')
       ? AssetImage(image)
       : image.contains('https://')
-      ? NetworkImage(image)
-      : FileImage(File(image)) as ImageProvider;
+          ? NetworkImage(image)
+          : FileImage(File(image)) as ImageProvider;
 }

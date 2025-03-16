@@ -139,19 +139,25 @@ class NeatCleanCalendarTile extends StatelessWidget {
                 Text(
                   date != null ? DateFormat("d").format(date!) : '',
                   style: TextStyle(
-                      fontSize: this.dayFontSize,
-                      fontWeight: FontWeight.w400,
-                      color: isSelected && this.date != null
-                          ? Colors.white
-                          : Utils.isSameDay(this.date!, DateTime.now())
-                              ? todayColor
-                              : inMonth
-                                  ? defaultDayColor != null
-                                      ? defaultDayColor
-                                      : Colors.black
-                                  : (defaultOutOfMonthDayColor != null
-                                      ? defaultOutOfMonthDayColor
-                                      : Colors.grey)),
+                    fontSize: this.dayFontSize,
+                    fontWeight: FontWeight.w400,
+                    color: isSelected && this.date != null
+                        ? Colors.white
+                        : Utils.isSameDay(this.date!, DateTime.now())
+                            ? todayColor
+                            : inMonth
+                                ? defaultDayColor != null
+                                    ? defaultDayColor
+                                    : events != null &&
+                                            events!.isNotEmpty &&
+                                            icon != ''
+                                        ? Colors.white
+                                        : Colors.black
+                                : (defaultOutOfMonthDayColor != null
+                                    ? defaultOutOfMonthDayColor
+                                    : Colors.grey),
+                  ),
+                  textScaler: TextScaler.noScaling,
                   // Grey color for previous or next months dates
                 ),
                 // Dots for the events
@@ -168,27 +174,30 @@ class NeatCleanCalendarTile extends StatelessWidget {
                             width: stateIndicatorSize,
                             height: stateIndicatorSize,
                             decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                // If event is done (isDone == true) set the color of the dots to
-                                // the eventDoneColor (if given) otherwise use the primary color of
-                                // the theme
-                                // If the event is not done yet, we use the given eventColor or the
-                                // color property of the NeatCleanCalendarEvent. If both aren't set, then
-                                // the accent color of the theme get used.
-                                color: (() {
-                                  if (isSelected) return Colors.white;
-                                  // If eventColor property was not set, the color defined for the event
-                                  // gets used.
-                                  if (event.isDone) {
-                                    return eventDoneColor ??
-                                        Theme.of(context).primaryColor;
-                                  }
-                                  return eventColor ??
-                                      event.color ??
-                                      Theme.of(context).colorScheme.secondary;
-                                }())),
+                              shape: BoxShape.circle,
+                              // If event is done (isDone == true) set the color of the dots to
+                              // the eventDoneColor (if given) otherwise use the primary color of
+                              // the theme
+                              // If the event is not done yet, we use the given eventColor or the
+                              // color property of the NeatCleanCalendarEvent. If both aren't set, then
+                              // the accent color of the theme get used.
+                              color: (() {
+                                if (isSelected) return Colors.white;
+                                // If eventColor property was not set, the color defined for the event
+                                // gets used. If the eveent has its property isDone set to true, the
+                                // eventDoneColor gets used.
+                                if (event.isDone) {
+                                  return eventDoneColor ??
+                                      Theme.of(context).primaryColor;
+                                }
+                                return eventColor ??
+                                    event.color ??
+                                    Theme.of(context).colorScheme.secondary;
+                              }()),
+                            ),
                           );
-                        }).toList())
+                        }).toList(),
+                      )
                     : Container(),
               ],
             ),
@@ -201,12 +210,12 @@ class NeatCleanCalendarTile extends StatelessWidget {
   String? get icon => events!
       .firstWhere(
         (element) => Utils.isSameDay(this.date!, element.startTime),
-    orElse: () => NeatCleanCalendarEvent(
-      '',
-      startTime: this.date!,
-      endTime: this.date!,
-    ),
-  )
+        orElse: () => NeatCleanCalendarEvent(
+          '',
+          startTime: this.date!,
+          endTime: this.date!,
+        ),
+      )
       .icon;
 
   @override

@@ -20,20 +20,22 @@ class NeatCleanCalendarEvent {
   Map<String, dynamic>? metadata;
   String? icon;
   bool? wide = false;
+  String? id;
 
   NeatCleanCalendarEvent(
-      this.summary, {
-        this.description = '',
-        this.location = '',
-        required this.startTime,
-        required this.endTime,
-        this.color = Colors.blue,
-        this.isAllDay = false,
-        this.isMultiDay = false,
-        this.isDone = false,
-        multiDaySegement,
-        this.metadata,
-        this.icon,
-        this.wide,
-      });
+    this.summary, {
+    this.description = '',
+    this.location = '',
+    required this.startTime,
+    required this.endTime,
+    this.color = Colors.blue,
+    this.isAllDay = false,
+    this.isMultiDay = false,
+    this.isDone = false,
+    multiDaySegement,
+    this.metadata,
+    this.icon,
+    this.wide,
+    this.id,
+  });
 }

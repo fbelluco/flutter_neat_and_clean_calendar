@@ -1,3 +1,100 @@
+## [0.4.16] - 2025-02-03
+* PR #89: If range > 0, the ID was cleared
+* PR #91, Issue #90: intl-dependency loosened
+
+## [0.4.15] - 2024-10-04
+* Issue #88: The calendar list view now considers the 'locale' parameter
+
+## [0.4.14] - 2024-09-04
+* Issue #87: Fixed calculation of multiday events
+
+## [0.4.13] - 2024-09-03
+* Some more null checks in reaction to an app crash log possibly related to this package
+
+## [0.4.12] - 2024-08-30
+* Issue 86: Updtae of the eventlist now works every time
+
+## [0.4.11] - 2024-08-29
+* Automatic scrolling to nearest date from today on loading the event list view
+* New callback method parameter onTodayButtonPressed
+
+## [0.4.10] - 2024-08-27
+* macos_ui removed as dependency
+* Issue #84: Events added after initial load are not displayed in the monthly view
+* touch target of the today button enlarded
+* event list view now scrolls to today (or closest entry to today's date) when today button is hit
+* CalendarTiles text doesn't scale with system settings
+
+## [0.4.9] - 2024-08-14
+* Issue #83: Updating the internal data possible again
+
+## [0.4.8] - 2024-08-13
+* Issue #82: Top row restructured, so that "Today" button is always centered, even when the date picker icon or the list picker icon is hidden
+
+## [0.4.7] - 2024-08-12
+* New parameter showEventListViewIcon to hide the list view icon
+
+## [0.4.6] - 2024-08-12
+* New callback for logging
+
+## [0.4.5] - 2024-08-11
+* Two new callback functions
+  * onListViewStateChanged
+  * onEventsUpdated
+
+## [0.4.4] - 2024-08-08
+* Individual color values for date picker style exchange against ThemeData objects
+
+## [0.4.3] - 2024-08-07
+* Bug-fix for styling today text in top bar
+
+## [0.4.2] - 2024-08-07
+* New properties for styling the top bar icons and the datepicker
+
+## [0.4.1] - 2024-08-06
+* Issue #78: new property eventCellBuilder for customization of the event list elements
+
+## [0.4.0] - 2024-08-06
+CAUTION: as announced in January 2022 the events map to set the calendar entries got finally removed. This can break your app and you might have to adapt it to use the events list.
+* Issue #80: Multi Day events have empty metadata
+* Issue #79: DatePicker now supports locale settings of the device
+* Some refactoring
+* Improved README
+
+## [0.3.19+41] - 2024-03-07
+* Update dependencies
+* Replace deprecated text-styles for Flutter 3.22
+
+## [0.3.18+40] - 2024-03-07
+* Issue #74: Avoid exception, when onDateSelected is null
+* Build for web and macOS
+
+## [0.3.17+37] - 2024-03-06
+* Update the intl package to 'any' in order to avoid problems when using this package
+
+## [0.3.16+36] - 2024-01-09
+* Issue #64: onDateSelected now delivers the correct date
+* Issue #67: onMonthChanged now also triggers, when using the date picker and the arrow buttons
+* Issue #68: eventDoneColor gets used, when isDone is set to true
+
+## [0.3.15+35] - 2023-12-08
+* Issue #61: onMonthChanged now correctly triggers
+
+## [0.3.14+32] - 2023-07-24
+* Pre-release state removed
+
+## [0.3.14-dev.2] - 2023-07-20
+* new property 'wide' for controlling the width of the image
+* property 'icon' now optional
+
+## [0.3.14-dev.1] - 2023-07-19
+* Publishing as Pre-Release becaus of the depencency of
+  a package with beta status
+
+## [0.3.14+29] - 2023-07-19
+* PR #52: New parameter for setting the icon of a NeatCleanCalendarEvent
+* Updated dependency of macos_ui, now building with Flutter 3.10.6
+
 ## [0.3.13+28] - 2023-01-18
 * PR #51: New parameter for a callback handling long pressing events
 ## [0.3.12+27] - 2022-12-3ß
